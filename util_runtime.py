@@ -1,6 +1,7 @@
 import os
 import math
 import time
+import torch
 
 def metric_line(metric, mode = 'train'):
 	out = ['\t' + mode.upper()]
