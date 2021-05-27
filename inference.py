@@ -1,7 +1,7 @@
 import torch
 from utils import highlight, erase
 
-def summarize(src, trg, highlighter, writer, tokenizer):
+def demo(src, trg, highlighter, writer, tokenizer):
 	if isinstance(src, str):
 		src = tokenizer(src, max_length=1024, return_tensors="pt")
 		trg = tokenizer(trg, max_length=1024, return_tensors="pt")
