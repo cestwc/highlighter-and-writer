@@ -32,8 +32,7 @@ def tokenClassificationTrainStep(model, optimizer, clip, criterion, src, labels,
 	return {'loss':loss.item(), 'metric':score}, logits
 
 def tokenClassificationEvalStep(model, criterion, src, labels, attention_mask = None):
-# 	outputs = model(src)
-# 	logits = outputs.logits
+
 	logits = torch.cat((model(src[:, :512]).logits, model(src[:, 512:]).logits), dim = 1)
 	
 	if attention_mask is not None:
