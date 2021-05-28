@@ -7,8 +7,8 @@ def tokenClassificationTrainStep(model, optimizer, clip, criterion, src, labels,
 
 	optimizer.zero_grad()
 
-	outputs = model(src)
-	logits = outputs.logits
+	logits = torch.cat((model(src[:, :512]).logits, model(src[:, 512:]).logits), dim = 1)
+
 	if attention_mask is not None:
 		active_loss = attention_mask.view(-1) == 1
 		active_logits = logits.view(-1, model.num_labels)
@@ -32,8 +32,10 @@ def tokenClassificationTrainStep(model, optimizer, clip, criterion, src, labels,
 	return {'loss':loss.item(), 'metric':score}, logits
 
 def tokenClassificationEvalStep(model, criterion, src, labels, attention_mask = None):
-	outputs = model(src)
-	logits = outputs.logits
+# 	outputs = model(src)
+# 	logits = outputs.logits
+	logits = torch.cat((model(src[:, :512]).logits, model(src[:, 512:]).logits), dim = 1)
+	
 	if attention_mask is not None:
 		active_loss = attention_mask.view(-1) == 1
 		active_logits = logits.view(-1, model.num_labels)
