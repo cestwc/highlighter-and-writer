@@ -96,7 +96,7 @@ def conditionalGenerationEvalStep(model, criterion, src, trg):
 
 	return {'loss':loss.item()}
 
-def train(iterator, clip, h = None, optH = None, criterionH = None, w = None, optW = None, criterionW = None, connection = 0.5):
+def train(iterator, clip, h = None, optH = None, criterionH = None, w = None, optW = None, criterionW = None, connection = 0.5, tuning = False):
 
 	epoch_loss = {}
 	if h is not None:
@@ -116,7 +116,11 @@ def train(iterator, clip, h = None, optH = None, criterionH = None, w = None, op
 		article_attention_mask = batch['article_attention_mask'].to(device)
 		h_mask = highlight(src, trg)
 		if 'h' in epoch_loss:
-			outputs, preds = tokenClassificationTrainStep(h, optH, clip, criterionH, src, h_mask, article_attention_mask)
+			if not tuning:
+				outputs, preds = tokenClassificationTrainStep(h, optH, clip, criterionH, src, h_mask, article_attention_mask)
+			else:
+				with torch.no_grad():
+					outputs, preds = tokenClassificationEvalStep(h, criterionH, src, h_mask, article_attention_mask)
 			epoch_loss['h'] += outputs['loss']
 			epoch_loss['metric'] += outputs['metric']
 
