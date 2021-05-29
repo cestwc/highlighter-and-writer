@@ -119,6 +119,7 @@ def train(iterator, clip, h = None, optH = None, criterionH = None, w = None, op
 			if not tuning:
 				outputs, preds = tokenClassificationTrainStep(h, optH, clip, criterionH, src, h_mask, article_attention_mask)
 			else:
+				h.eval()
 				with torch.no_grad():
 					outputs, preds = tokenClassificationEvalStep(h, criterionH, src, h_mask, article_attention_mask)
 			epoch_loss['h'] += outputs['loss']
