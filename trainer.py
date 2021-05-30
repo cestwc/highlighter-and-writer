@@ -100,7 +100,10 @@ def train(iterator, clip, h = None, optH = None, criterionH = None, w = None, op
 
 	epoch_loss = {}
 	if h is not None:
-		h.train()
+		if not tuning:
+			h.train()
+		elseL:
+			h.eval()
 		epoch_loss['h'] = 0
 		epoch_loss['metric'] = torch.zeros(4)
 		device = h.device
@@ -119,7 +122,6 @@ def train(iterator, clip, h = None, optH = None, criterionH = None, w = None, op
 			if not tuning:
 				outputs, preds = tokenClassificationTrainStep(h, optH, clip, criterionH, src, h_mask, article_attention_mask)
 			else:
-				h.eval()
 				with torch.no_grad():
 					outputs, preds = tokenClassificationEvalStep(h, criterionH, src, h_mask, article_attention_mask)
 			epoch_loss['h'] += outputs['loss']
