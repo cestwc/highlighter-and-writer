@@ -102,7 +102,7 @@ def train(iterator, clip, h = None, optH = None, criterionH = None, w = None, op
 	if h is not None:
 		if not tuning:
 			h.train()
-		elseL:
+		else:
 			h.eval()
 		epoch_loss['h'] = 0
 		epoch_loss['metric'] = torch.zeros(4)
