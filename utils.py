@@ -5,7 +5,7 @@ def highlight(article_tensor, highlights_tensor):
 	masks = []
 	for i in range(unique_tensor.shape[1]):
 		masks.append(torch.eq(article_tensor, unique_tensor[:,i].unsqueeze(1).repeat(1, article_tensor.shape[1])))
-	return torch.logical_and(sum(masks).bool(), article_tensor != 1).long()
+	return torch.logical_and(sum(masks).bool(), article_tensor > 44).long()
 
 def erase(article_tensor, highlight_mask):
 	highlight_mask = highlight_mask.bool()
