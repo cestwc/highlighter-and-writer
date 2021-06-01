@@ -5,6 +5,8 @@ import json
 from tqdm.notebook import tqdm
 
 def demo(iterator, h = None, w = None, connection = 1, tokenizer = None, directory = 'result-cnndm-test.json'):
+	
+	device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
 	if h is not None:
 		h.eval()
