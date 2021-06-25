@@ -125,11 +125,11 @@ def train(iterator, clip, h = None, optH = None, criterionH = None, w = None, op
 		article_attention_mask = batch['article_attention_mask'].to(device)
 		h_mask = highlight(src, trg)
 		if 'h' in epoch_loss:
-			if not tuning:
-				outputs, preds = tokenClassificationTrainStep(h, optH, clip, criterionH, src, h_mask, article_attention_mask)
-			else:
+			if tuning and 'w' in epoch_loss:
 				with torch.no_grad():
 					outputs, preds = tokenClassificationEvalStep(h, criterionH, src, h_mask, article_attention_mask)
+			else:
+				outputs, preds = tokenClassificationTrainStep(h, optH, clip, criterionH, src, h_mask, article_attention_mask)
 			epoch_loss['h'] += outputs['loss']
 			epoch_loss['metric'] += outputs['metric']
 
