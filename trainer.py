@@ -11,8 +11,9 @@ def tokenClassificationTrainStep(model, optimizer, clip, src, labels, attention_
 		logits = model(src, attention_mask = attention_mask).logits
 	else:
 		logits = torch.cat((model(src[:, :512], attention_mask = attention_mask[:, :512]).logits, model(src[:, 512:], attention_mask = attention_mask[:, 512:]).logits), dim = 1)
-		
-	criterion = torch.nn.CrossEntropyLoss(weight = torch.unique(labels, return_counts = True)[1])
+	
+	counts = torch.unique(labels, return_counts = True)[1]
+	criterion = torch.nn.CrossEntropyLoss(weight = torch.log(torch.max(counts) / counts) + 1)
 	
 	if attention_mask is not None:
 		active_loss = attention_mask.view(-1) == 1
@@ -43,7 +44,8 @@ def tokenClassificationEvalStep(model, src, labels, attention_mask = None):
 	else:
 		logits = torch.cat((model(src[:, :512], attention_mask = attention_mask[:, :512]).logits, model(src[:, 512:], attention_mask = attention_mask[:, 512:]).logits), dim = 1)
 	
-	criterion = torch.nn.CrossEntropyLoss(weight = torch.unique(labels, return_counts = True)[1])
+	counts = torch.unique(labels, return_counts = True)[1]
+	criterion = torch.nn.CrossEntropyLoss(weight = torch.log(torch.max(counts) / counts) + 1)
 	
 	if attention_mask is not None:
 		active_loss = attention_mask.view(-1) == 1
