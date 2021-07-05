@@ -29,10 +29,10 @@ def binary_metric(preds, y):
 def labelRatios(iterator, n_classes = 2):
 	ratio = torch.ones(n_classes) # normally, it should start from zero, though we start with one to avoid 'divide by zero'
 	for batch in iterator:
+		src = batch['article_ids']
+		trg = batch['highlights_ids']
+		article_attention_mask = batch['article_attention_mask']
+		h_mask = highlight(src, trg)
 		for i in range(n_classes):
-			src = batch['article_ids']
-			trg = batch['highlights_ids']
-			article_attention_mask = batch['article_attention_mask']
-			h_mask = highlight(src, trg)
 			ratio[i] += torch.sum(torch.logical_and(h_mask == i, article_attention_mask)) # this is a super slow method, though it does not hurt so far
 	return ratio
