@@ -3,7 +3,7 @@ from tqdm.notebook import tqdm
 
 from utils import highlight, erase, binary_metric
 
-def tokenClassificationTrainStep(model, optimizer, clip, criterion, src, labels, attention_mask = None):
+def tokenClassificationTrainStep(model, optimizer, clip, src, labels, attention_mask = None):
 
 	optimizer.zero_grad()
 
@@ -11,7 +11,9 @@ def tokenClassificationTrainStep(model, optimizer, clip, criterion, src, labels,
 		logits = model(src, attention_mask = attention_mask).logits
 	else:
 		logits = torch.cat((model(src[:, :512], attention_mask = attention_mask[:, :512]).logits, model(src[:, 512:], attention_mask = attention_mask[:, 512:]).logits), dim = 1)
-
+		
+	criterion = torch.nn.CrossEntropyLoss(weight = torch.tensor([0.37, 0.63])).to(model.device)
+	
 	if attention_mask is not None:
 		active_loss = attention_mask.view(-1) == 1
 		active_logits = logits.view(-1, model.num_labels)
@@ -34,12 +36,14 @@ def tokenClassificationTrainStep(model, optimizer, clip, criterion, src, labels,
 
 	return {'loss':loss.item(), 'metric':score}, logits
 
-def tokenClassificationEvalStep(model, criterion, src, labels, attention_mask = None):
+def tokenClassificationEvalStep(model, src, labels, attention_mask = None):
 
 	if 'longformer' in str(type(model)):
 		logits = model(src, attention_mask = attention_mask).logits
 	else:
 		logits = torch.cat((model(src[:, :512], attention_mask = attention_mask[:, :512]).logits, model(src[:, 512:], attention_mask = attention_mask[:, 512:]).logits), dim = 1)
+	
+	criterion = torch.nn.CrossEntropyLoss(weight = torch.tensor([0.37, 0.63])).to(model.device)
 	
 	if attention_mask is not None:
 		active_loss = attention_mask.view(-1) == 1
@@ -55,7 +59,7 @@ def tokenClassificationEvalStep(model, criterion, src, labels, attention_mask = 
 
 	return {'loss':loss.item(), 'metric':score}, logits
 
-def conditionalGenerationTrainStep(model, optimizer, clip, criterion, src, trg):
+def conditionalGenerationTrainStep(model, optimizer, clip, src, trg):
 	optimizer.zero_grad()
 
 	output = model(src, decoder_input_ids = trg[:,:-1])[0]
@@ -73,6 +77,8 @@ def conditionalGenerationTrainStep(model, optimizer, clip, criterion, src, trg):
 
 	#output = [batch size * trg len - 1, output dim]
 	#trg = [batch size * trg len - 1]
+	
+	criterion = torch.nn.CrossEntropyLoss(ignore_index=1)
 
 	loss = criterion(output, trg)
 
@@ -84,7 +90,7 @@ def conditionalGenerationTrainStep(model, optimizer, clip, criterion, src, trg):
 
 	return {'loss':loss.item()}
 
-def conditionalGenerationEvalStep(model, criterion, src, trg):
+def conditionalGenerationEvalStep(model, src, trg):
 	output = model(src, decoder_input_ids = trg[:,:-1])[0]
 
 	#output = [batch size, trg len - 1, output dim]
@@ -97,12 +103,14 @@ def conditionalGenerationEvalStep(model, criterion, src, trg):
 
 	#output = [batch size * trg len - 1, output dim]
 	#trg = [batch size * trg len - 1]
+	
+	criterion = torch.nn.CrossEntropyLoss(ignore_index=1)
 
 	loss = criterion(output, trg)
 
 	return {'loss':loss.item()}
 
-def train(iterator, clip, h = None, optH = None, criterionH = None, w = None, optW = None, criterionW = None, connection = 0.5, tuning = False):
+def train(iterator, clip, h = None, optH = None, w = None, optW = None, connection = 0.5, tuning = False):
 
 	epoch_loss = {}
 	if h is not None:
@@ -127,20 +135,20 @@ def train(iterator, clip, h = None, optH = None, criterionH = None, w = None, op
 		if 'h' in epoch_loss:
 			if tuning and 'w' in epoch_loss:
 				with torch.no_grad():
-					outputs, preds = tokenClassificationEvalStep(h, criterionH, src, h_mask, article_attention_mask)
+					outputs, preds = tokenClassificationEvalStep(h, src, h_mask, article_attention_mask)
 			else:
-				outputs, preds = tokenClassificationTrainStep(h, optH, clip, criterionH, src, h_mask, article_attention_mask)
+				outputs, preds = tokenClassificationTrainStep(h, optH, clip, src, h_mask, article_attention_mask)
 			epoch_loss['h'] += outputs['loss']
 			epoch_loss['metric'] += outputs['metric']
 
 		if 'w' in epoch_loss:
 			src_erased = erase(src, torch.logical_and(preds.argmax(2), article_attention_mask)).to(device) if 'h' in epoch_loss and torch.rand(1) < connection else erase(src, h_mask).to(device)
-			outputs = conditionalGenerationTrainStep(w, optW, clip, criterionW, src_erased, trg)
+			outputs = conditionalGenerationTrainStep(w, optW, clip, src_erased, trg)
 			epoch_loss['w'] += outputs['loss']
 
 	return {key:value/len(iterator) for key, value in epoch_loss.items()}
 
-def evaluate(iterator, h = None, criterionH = None, w = None, criterionW = None, connection = 0.5):
+def evaluate(iterator, h = None, w = None, connection = 0.5):
 
 	epoch_loss = {}
 	if h is not None:
@@ -162,13 +170,13 @@ def evaluate(iterator, h = None, criterionH = None, w = None, criterionW = None,
 			article_attention_mask = batch['article_attention_mask'].to(device)
 			h_mask = highlight(src, trg)
 			if 'h' in epoch_loss:
-				outputs, preds = tokenClassificationEvalStep(h, criterionH, src, h_mask, article_attention_mask)
+				outputs, preds = tokenClassificationEvalStep(h, src, h_mask, article_attention_mask)
 				epoch_loss['h'] += outputs['loss']
 				epoch_loss['metric'] += outputs['metric']
 
 			if 'w' in epoch_loss:
 				src_erased = erase(src, torch.logical_and(preds.argmax(2), article_attention_mask)).to(device) if 'h' in epoch_loss and torch.rand(1) < connection else erase(src, h_mask).to(device)
-				outputs = conditionalGenerationEvalStep(w, criterionW, src_erased, trg)
+				outputs = conditionalGenerationEvalStep(w, src_erased, trg)
 				epoch_loss['w'] += outputs['loss']
 
 
