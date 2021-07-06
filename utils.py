@@ -27,7 +27,7 @@ def binary_metric(preds, y):
 	return torch.tensor([recall.mean(), prec.mean(), f1.mean(), f2.mean()])
 
 def labelcounts(iterator, n_classes = 2):
-	counts = torch.ones(n_classes) # normally, it should start from zero, though we start with one to avoid 'divide by zero'
+	counts = torch.ones(n_classes) * 2 # normally, it should start from zero, though we start with 2 to avoid 'divide by zero'
 	for batch in iterator:
 		src = batch['article_ids']
 		trg = batch['highlights_ids']
