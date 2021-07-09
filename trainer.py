@@ -2,6 +2,20 @@ import torch
 from tqdm.notebook import tqdm
 
 from utils import highlight, erase, binary_metric
+import torch.nn.functional as F
+
+def dice_loss(pred, true):
+	smooth=1e-3
+
+	pred = F.softmax(pred, dim = 1)
+	true = F.one_hot(true, num_classes=pred.shape[1])
+
+	inse = torch.sum(pred * true, 0)
+	l = torch.sum(pred, 0)
+	r = torch.sum(true, 0)
+
+	loss = 1.0 - (2.0 * inse + smooth) / (l + r + smooth)
+	return torch.sum(loss)
 
 def tokenClassificationTrainStep(model, optimizer, clip, src, labels, attention_mask = None):
 
@@ -13,7 +27,7 @@ def tokenClassificationTrainStep(model, optimizer, clip, src, labels, attention_
 		logits = torch.cat((model(src[:, :512], attention_mask = attention_mask[:, :512]).logits, model(src[:, 512:], attention_mask = attention_mask[:, 512:]).logits), dim = 1)
 	
 	counts = torch.unique(labels.masked_select(attention_mask.bool()), return_counts = True)[1] if attention_mask is not None else torch.unique(labels, return_counts = True)[1]
-	criterion = torch.nn.CrossEntropyLoss(weight = torch.tensor([0.2715, 0.7285])).to(counts.device)#1 / (1 - torch.pow(0.99857, counts))
+	criterion = dice_loss#torch.nn.CrossEntropyLoss(weight = torch.tensor([0.2715, 0.7285])).to(counts.device)#1 / (1 - torch.pow(0.99857, counts))
 	
 	if attention_mask is not None:
 		active_loss = attention_mask.view(-1) == 1
@@ -30,6 +44,7 @@ def tokenClassificationTrainStep(model, optimizer, clip, src, labels, attention_
 	score = binary_metric(logits, labels)
 
 	loss.backward()
+	print(loss.item())
 
 	torch.nn.utils.clip_grad_norm_(model.parameters(), clip)
 
@@ -45,7 +60,7 @@ def tokenClassificationEvalStep(model, src, labels, attention_mask = None):
 		logits = torch.cat((model(src[:, :512], attention_mask = attention_mask[:, :512]).logits, model(src[:, 512:], attention_mask = attention_mask[:, 512:]).logits), dim = 1)
 	
 	counts = torch.unique(labels.masked_select(attention_mask.bool()), return_counts = True)[1] if attention_mask is not None else torch.unique(labels, return_counts = True)[1]
-	criterion = torch.nn.CrossEntropyLoss(weight = torch.tensor([0.2715, 0.7285])).to(counts.device)#1 / (1 - torch.pow(0.99857, counts))
+	criterion = dice_loss#torch.nn.CrossEntropyLoss(weight = torch.tensor([0.2715, 0.7285])).to(counts.device)#1 / (1 - torch.pow(0.99857, counts))
 	
 	if attention_mask is not None:
 		active_loss = attention_mask.view(-1) == 1
