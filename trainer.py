@@ -4,8 +4,9 @@ from tqdm.notebook import tqdm
 from utils import highlight, erase, binary_metric
 import torch.nn.functional as F
 
-def dice_loss(pred, true):
+def dice_loss(pred, label):
 	smooth=1e-3
+	true = label.masked_fill(label < 0, 0)
 
 	pred = F.softmax(pred, dim = 1)
 	true = F.one_hot(true, num_classes=pred.shape[1])
@@ -33,7 +34,7 @@ def tokenClassificationTrainStep(model, optimizer, clip, src, labels, attention_
 		active_loss = attention_mask.view(-1) == 1
 		active_logits = logits.view(-1, model.num_labels)
 		active_labels = torch.where(
-			active_loss, labels.view(-1), torch.tensor(criterion.ignore_index).type_as(labels)
+			active_loss, labels.view(-1), torch.tensor(-100).type_as(labels) # -100 criterion.ignore_index for ce loss
 		)
 		loss = criterion(active_logits, active_labels)
 	else:
@@ -44,7 +45,6 @@ def tokenClassificationTrainStep(model, optimizer, clip, src, labels, attention_
 	score = binary_metric(logits, labels)
 
 	loss.backward()
-	print(loss.item())
 
 	torch.nn.utils.clip_grad_norm_(model.parameters(), clip)
 
@@ -66,7 +66,7 @@ def tokenClassificationEvalStep(model, src, labels, attention_mask = None):
 		active_loss = attention_mask.view(-1) == 1
 		active_logits = logits.view(-1, model.num_labels)
 		active_labels = torch.where(
-			active_loss, labels.view(-1), torch.tensor(criterion.ignore_index).type_as(labels)
+			active_loss, labels.view(-1), torch.tensor(-100).type_as(labels)
 		)
 		loss = criterion(active_logits, active_labels)
 	else:
