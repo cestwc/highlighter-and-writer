@@ -16,10 +16,8 @@ def dice_loss(pred, label):
 	r = torch.sum(true, 0)
 
 	loss = 1.0 - (2.0 * inse + smooth) / (l + r + smooth)
-	loss1 = torch.sum(loss)
-	loss2 = F.cross_entropy(pred, label, weight = torch.tensor([0.37, 0.63]).to(label.device)) / 5
-	print('dice:', loss1.item(), '  ce: ', loss2.item())
-	return loss1 + loss2
+	
+	return torch.sum(loss)# + F.cross_entropy(pred, label, weight = torch.tensor([0.37, 0.63]).to(label.device)) / 5
 
 def tokenClassificationTrainStep(model, optimizer, clip, src, labels, attention_mask = None):
 
