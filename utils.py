@@ -19,7 +19,8 @@ def erase(article_tensor, highlight_mask):
 	return torch.nn.utils.rnn.pad_sequence(l, batch_first=True, padding_value=1).long()
 
 def binary_metric(preds, y, attention_mask):
-	rounded_preds = torch.sigmoid(logits) > 0.5 * attention_mask
+	rounded_preds = torch.sigmoid(preds) > 0.5 * attention_mask
+	print(rounded_preds.shape, y.shape)
 	t = rounded_preds == y
 	p = rounded_preds == 1
 	tp = torch.sum(torch.logical_and(t, p).float(), dim = 1)
