@@ -34,8 +34,8 @@ def dice_loss(pred, label):
 	r = torch.sum(true * attention_mask, 0)
 
 	loss = 1.0 - (2.0 * inse + smooth) / (l + r + smooth)
-	loss2 = F.cross_entropy(pred, label, weight = torch.tensor([0.2726, 0.7274]).to(label.device))
-	print('dice: ', loss.item(), '  ce: ',loss2.item())
+# 	loss2 = F.cross_entropy(pred, label, weight = torch.tensor([0.2726, 0.7274]).to(label.device))
+# 	print('dice: ', loss.item(), '  ce: ',loss2.item())
 	
 	return loss#torch.maximum(, )
 
