@@ -1,11 +1,17 @@
-import torch
+import re
+import nltk
+nltk.download('stopwords')
 
-def highlight(article_tensor, highlights_tensor):
-	unique_tensor = torch.unique(highlights_tensor, dim = 1)
-	masks = []
-	for i in range(unique_tensor.shape[1]):
-		masks.append(torch.eq(article_tensor, unique_tensor[:,i].unsqueeze(1).repeat(1, article_tensor.shape[1])))
-	return torch.logical_and(sum(masks).bool(), article_tensor > 44).long()
+from nltk.corpus import stopwords
+pattern = re.compile(r'\b(' + r'|'.join(stopwords.words('english')) + r')\b\s*' + r'|[^\w\s]')
+
+removeStopWords = lambda x:pattern.sub('', x)
+
+def inOtherList(a, b):
+	b = set(b)    
+	return list(map(lambda x: x in b, a))
+
+import torch
 
 def erase(article_tensor, highlight_mask):
 	highlight_mask = highlight_mask.bool()
