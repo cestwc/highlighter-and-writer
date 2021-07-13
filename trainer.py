@@ -17,7 +17,7 @@ def dice_loss(pred, label):
 
 	loss = 1.0 - (2.0 * inse + smooth) / (l + r + smooth)
 	
-	return torch.sum(loss)# + F.cross_entropy(pred, label, weight = torch.tensor([0.37, 0.63]).to(label.device)) / 5
+	return torch.maximum(torch.sum(loss), F.cross_entropy(pred, label, weight = torch.tensor([0.2726, 0.7274]).to(label.device)))
 
 def tokenClassificationTrainStep(model, optimizer, clip, src, labels, attention_mask = None):
 
