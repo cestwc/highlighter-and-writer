@@ -26,6 +26,7 @@ def demo(iterator, h = None, w = None, connection = 1, tokenizer = None, directo
 				src = batch['article_ids'].to(device)
 				trg = batch['highlights_ids'].to(device)
 				article_attention_mask = batch['article_attention_mask'].to(device)
+				highlight_mask = batch['highlight_mask'].to(device)
 				
 				connected = torch.rand(1) < connection
 				if h is not None:
@@ -38,7 +39,7 @@ def demo(iterator, h = None, w = None, connection = 1, tokenizer = None, directo
 				
 				if not connected:
 					print('The model is not highlighting.')
-					src_erased = erase(src, highlight(src, trg)).to(device)
+					src_erased = erase(src, highlight_mask).to(device)
 
 				if w is not None:
 					summary_ids = w.generate(src_erased, num_beams=4, max_length=1024, early_stopping=True)
