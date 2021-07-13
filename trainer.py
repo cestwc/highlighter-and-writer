@@ -4,40 +4,20 @@ from tqdm.notebook import tqdm
 from utils import erase, binary_metric
 import torch.nn.functional as F
 
-# def dice_loss(pred, label):
-# 	smooth=1e-3
-# 	true = label.masked_fill(label < 0, 0)
-# 	attention_mask = (label >= 0).unsqueeze(1).expand(-1, 2) 
 
-# 	pred = F.softmax(pred, dim = 1)
-# 	true = F.one_hot(true, num_classes=pred.shape[1])
-
-# 	inse = torch.sum(pred * true * attention_mask, 0)
-# 	l = torch.sum(pred * attention_mask, 0)
-# 	r = torch.sum(true * attention_mask, 0)
-
-# 	loss = (1.0 - (2.0 * inse + smooth) / (l + r + smooth)).sum()
-# 	loss2 = F.cross_entropy(pred, label, weight = torch.tensor([0.2726, 0.7274]).to(label.device))
-# 	print('dice: ', loss.item(), '  ce: ',loss2.item()*7)
-	
-# 	return loss#torch.maximum(, )
-
-def dice_loss(pred, label):
+def binary_dice_loss(logits, targets):
 	smooth=1e-3
-	true = label.masked_fill(label < 0, 0)
-	attention_mask = label >= 0
-
-	pred = F.softmax(pred, dim = 1)
-
-	inse = torch.sum(pred[:, 0] * true * attention_mask, 0)
-	l = torch.sum(pred[:, 0] * attention_mask, 0)
-	r = torch.sum(true * attention_mask, 0)
-
-	loss = 1.0 - (2.0 * inse + smooth) / (l + r + smooth)
-# 	loss2 = F.cross_entropy(pred, label, weight = torch.tensor([0.2726, 0.7274]).to(label.device))
-# 	print('dice: ', loss.item(), '  ce: ',loss2.item())
 	
-	return loss#torch.maximum(, )
+	attention_mask = label > 0
+
+	inputs = torch.sigmoid(logits) * attention_mask
+
+	intersection = (inputs * targets).sum()                            
+	dice_loss = 1 - (2.*intersection + smooth)/(inputs.sum() + (attention_mask * targets).sum() + smooth)  
+	# BCE = F.binary_cross_entropy(inputs, targets, reduction='mean')
+# 	Dice_BCE = dice_loss# + BCE
+
+	return dice_loss
 
 def tokenClassificationTrainStep(model, optimizer, clip, src, labels, attention_mask = None):
 
@@ -50,13 +30,13 @@ def tokenClassificationTrainStep(model, optimizer, clip, src, labels, attention_
 	
 	if attention_mask is not None:
 		active_loss = attention_mask.view(-1) == 1
-		active_logits = logits.view(-1, model.num_labels)
+		active_logits = logits.view(-1)
 		active_labels = torch.where(
 			active_loss, labels.view(-1), torch.tensor(-100).type_as(labels) # -100 criterion.ignore_index for ce loss
 		)
 		loss = criterion(active_logits, active_labels)
 	else:
-		loss = criterion(logits.view(-1, model.num_labels), labels.view(-1))
+		loss = criterion(logits.view(-1), labels.view(-1))
 
 	#logits = [batch size, src len]
 
@@ -79,13 +59,13 @@ def tokenClassificationEvalStep(model, src, labels, attention_mask = None):
 	
 	if attention_mask is not None:
 		active_loss = attention_mask.view(-1) == 1
-		active_logits = logits.view(-1, model.num_labels)
+		active_logits = logits.view(-1)
 		active_labels = torch.where(
 			active_loss, labels.view(-1), torch.tensor(-100).type_as(labels)
 		)
 		loss = criterion(active_logits, active_labels)
 	else:
-		loss = criterion(logits.view(-1, model.num_labels), labels.view(-1))
+		loss = criterion(logits.view(-1), labels.view(-1))
 
 	score = binary_metric(logits, labels, attention_mask)
 
