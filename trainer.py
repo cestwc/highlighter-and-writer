@@ -149,7 +149,7 @@ def train(iterator, clip, h = None, optH = None, w = None, optW = None, connecti
 		src = batch['article_ids'].to(device)
 		trg = batch['highlights_ids'].to(device)
 		article_attention_mask = batch['article_attention_mask'].to(device)
-		h_mask = torch.logical_and(batch['highlight_mask'], batch['article_attention_mask']).to(device)
+		h_mask = torch.logical_and(batch['highlight_mask'], batch['article_attention_mask']).long().to(device)
 		if 'h' in epoch_loss:
 			if tuning and 'w' in epoch_loss:
 				with torch.no_grad():
@@ -186,7 +186,7 @@ def evaluate(iterator, h = None, w = None, connection = 0.5):
 			src = batch['article_ids'].to(device)
 			trg = batch['highlights_ids'].to(device)
 			article_attention_mask = batch['article_attention_mask'].to(device)
-			h_mask = torch.logical_and(batch['highlight_mask'], batch['article_attention_mask']).to(device)
+			h_mask = torch.logical_and(batch['highlight_mask'], batch['article_attention_mask']).long().to(device)
 			if 'h' in epoch_loss:
 				outputs, preds = tokenClassificationEvalStep(h, src, h_mask, article_attention_mask)
 				epoch_loss['h'] += outputs['loss']
