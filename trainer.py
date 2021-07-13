@@ -23,10 +23,7 @@ def tokenClassificationTrainStep(model, optimizer, clip, src, labels, attention_
 
 	optimizer.zero_grad()
 
-	if 'longformer' in str(type(model)):
-		logits = model(src, attention_mask = attention_mask).logits
-	else:
-		logits = torch.cat((model(src[:, :512], attention_mask = attention_mask[:, :512]).logits, model(src[:, 512:], attention_mask = attention_mask[:, 512:]).logits), dim = 1)
+	logits = model(src, attention_mask = attention_mask).logits
 	
 	counts = torch.unique(labels.masked_select(attention_mask.bool()), return_counts = True)[1] if attention_mask is not None else torch.unique(labels, return_counts = True)[1]
 	criterion = dice_loss#torch.nn.CrossEntropyLoss(weight = torch.tensor([0.2715, 0.7285])).to(counts.device)#1 / (1 - torch.pow(0.99857, counts))
@@ -55,10 +52,7 @@ def tokenClassificationTrainStep(model, optimizer, clip, src, labels, attention_
 
 def tokenClassificationEvalStep(model, src, labels, attention_mask = None):
 
-	if 'longformer' in str(type(model)):
-		logits = model(src, attention_mask = attention_mask).logits
-	else:
-		logits = torch.cat((model(src[:, :512], attention_mask = attention_mask[:, :512]).logits, model(src[:, 512:], attention_mask = attention_mask[:, 512:]).logits), dim = 1)
+	logits = model(src, attention_mask = attention_mask).logits
 	
 	counts = torch.unique(labels.masked_select(attention_mask.bool()), return_counts = True)[1] if attention_mask is not None else torch.unique(labels, return_counts = True)[1]
 	criterion = dice_loss#torch.nn.CrossEntropyLoss(weight = torch.tensor([0.2715, 0.7285])).to(counts.device)#1 / (1 - torch.pow(0.99857, counts))
