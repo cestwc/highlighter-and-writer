@@ -26,7 +26,7 @@ def demo(iterator, h = None, w = None, connection = 1, tokenizer = None, directo
 				src = batch['article_ids'].to(device)
 				trg = batch['highlights_ids'].to(device)
 				article_attention_mask = batch['article_attention_mask'].to(device)
-				highlight_mask = batch['highlight_mask'].to(device)
+				highlight_mask = torch.logical_and(batch['highlight_mask'], batch['article_attention_mask']).to(device)
 				
 				connected = torch.rand(1) < connection
 				if h is not None:
