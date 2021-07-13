@@ -40,7 +40,7 @@ def tokenClassificationTrainStep(model, optimizer, clip, src, labels, attention_
 
 	#logits = [batch size, src len]
 
-	score = binary_metric(logits, labels)
+	score = binary_metric(logits, labels, attention_mask)
 
 	loss.backward()
 
@@ -67,7 +67,7 @@ def tokenClassificationEvalStep(model, src, labels, attention_mask = None):
 	else:
 		loss = criterion(logits.view(-1, model.num_labels), labels.view(-1))
 
-	score = binary_metric(logits, labels)
+	score = binary_metric(logits, labels, attention_mask)
 
 	return {'loss':loss.item(), 'metric':score}, logits
 
