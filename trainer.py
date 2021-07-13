@@ -8,7 +8,7 @@ import torch.nn.functional as F
 def binary_dice_loss(logits, targets):
 	smooth=1e-3
 	
-	attention_mask = label > 0
+	attention_mask = targets > 0
 
 	inputs = torch.sigmoid(logits) * attention_mask
 
