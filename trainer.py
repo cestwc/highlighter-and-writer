@@ -27,10 +27,10 @@ def dice_loss(pred, label):
 	true = label.masked_fill(label < 0, 0)
 	attention_mask = label >= 0
 
-	pred = F.softmax(pred, dim = 1)[:, 0]
+	pred = F.softmax(pred, dim = 1)
 
-	inse = torch.sum(pred * true * attention_mask, 0)
-	l = torch.sum(pred * attention_mask, 0)
+	inse = torch.sum(pred[:, 0] * true * attention_mask, 0)
+	l = torch.sum(pred[:, 0] * attention_mask, 0)
 	r = torch.sum(true * attention_mask, 0)
 
 	loss = 1.0 - (2.0 * inse + smooth) / (l + r + smooth)
