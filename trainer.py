@@ -4,21 +4,38 @@ from tqdm.notebook import tqdm
 from utils import erase, binary_metric
 import torch.nn.functional as F
 
+# def dice_loss(pred, label):
+# 	smooth=1e-3
+# 	true = label.masked_fill(label < 0, 0)
+# 	attention_mask = (label >= 0).unsqueeze(1).expand(-1, 2) 
+
+# 	pred = F.softmax(pred, dim = 1)
+# 	true = F.one_hot(true, num_classes=pred.shape[1])
+
+# 	inse = torch.sum(pred * true * attention_mask, 0)
+# 	l = torch.sum(pred * attention_mask, 0)
+# 	r = torch.sum(true * attention_mask, 0)
+
+# 	loss = (1.0 - (2.0 * inse + smooth) / (l + r + smooth)).sum()
+# 	loss2 = F.cross_entropy(pred, label, weight = torch.tensor([0.2726, 0.7274]).to(label.device))
+# 	print('dice: ', loss.item(), '  ce: ',loss2.item()*7)
+	
+# 	return loss#torch.maximum(, )
+
 def dice_loss(pred, label):
 	smooth=1e-3
 	true = label.masked_fill(label < 0, 0)
-	attention_mask = (label >= 0).unsqueeze(1).expand(-1, 2) 
+	attention_mask = label >= 0
 
-	pred = F.softmax(pred, dim = 1)
-	true = F.one_hot(true, num_classes=pred.shape[1])
+	pred = F.softmax(pred, dim = 1)[:, 0]
 
 	inse = torch.sum(pred * true * attention_mask, 0)
 	l = torch.sum(pred * attention_mask, 0)
 	r = torch.sum(true * attention_mask, 0)
 
-	loss = (1.0 - (2.0 * inse + smooth) / (l + r + smooth)).sum()
+	loss = 1.0 - (2.0 * inse + smooth) / (l + r + smooth)
 	loss2 = F.cross_entropy(pred, label, weight = torch.tensor([0.2726, 0.7274]).to(label.device))
-	print('dice: ', loss.item(), '  ce: ',loss2.item()*7)
+	print('dice: ', loss.item(), '  ce: ',loss2.item())
 	
 	return loss#torch.maximum(, )
 
