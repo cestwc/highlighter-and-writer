@@ -26,7 +26,7 @@ def tokenClassificationTrainStep(model, optimizer, clip, src, labels, attention_
 	logits = model(src, attention_mask = attention_mask).logits
 	
 	counts = torch.unique(labels.masked_select(attention_mask.bool()), return_counts = True)[1] if attention_mask is not None else torch.unique(labels, return_counts = True)[1]
-	criterion = dice_loss#torch.nn.CrossEntropyLoss(weight = torch.tensor([0.2715, 0.7285])).to(counts.device)#1 / (1 - torch.pow(0.99857, counts))
+	criterion = binary_dice_loss#torch.nn.CrossEntropyLoss(weight = torch.tensor([0.2715, 0.7285])).to(counts.device)#1 / (1 - torch.pow(0.99857, counts))
 	
 	if attention_mask is not None:
 		active_loss = attention_mask.view(-1) == 1
@@ -55,7 +55,7 @@ def tokenClassificationEvalStep(model, src, labels, attention_mask = None):
 	logits = model(src, attention_mask = attention_mask).logits
 	
 	counts = torch.unique(labels.masked_select(attention_mask.bool()), return_counts = True)[1] if attention_mask is not None else torch.unique(labels, return_counts = True)[1]
-	criterion = dice_loss#torch.nn.CrossEntropyLoss(weight = torch.tensor([0.2715, 0.7285])).to(counts.device)#1 / (1 - torch.pow(0.99857, counts))
+	criterion = binary_dice_loss#torch.nn.CrossEntropyLoss(weight = torch.tensor([0.2715, 0.7285])).to(counts.device)#1 / (1 - torch.pow(0.99857, counts))
 	
 	if attention_mask is not None:
 		active_loss = attention_mask.view(-1) == 1
@@ -154,7 +154,7 @@ def train(iterator, clip, h = None, optH = None, w = None, optW = None, connecti
 			epoch_loss['metric'] += outputs['metric']
 
 		if 'w' in epoch_loss:
-			src_erased = erase(src, torch.logical_and(preds.argmax(2), article_attention_mask)).to(device) if 'h' in epoch_loss and torch.rand(1) < connection else erase(src, h_mask).to(device)
+			src_erased = erase(src, torch.logical_and(torch.sigmoid(preds)>0.5, article_attention_mask)).to(device) if 'h' in epoch_loss and torch.rand(1) < connection else erase(src, h_mask).to(device)
 			outputs = conditionalGenerationTrainStep(w, optW, clip, src_erased, trg)
 			epoch_loss['w'] += outputs['loss']
 
@@ -187,7 +187,7 @@ def evaluate(iterator, h = None, w = None, connection = 0.5):
 				epoch_loss['metric'] += outputs['metric']
 
 			if 'w' in epoch_loss:
-				src_erased = erase(src, torch.logical_and(preds.argmax(2), article_attention_mask)).to(device) if 'h' in epoch_loss and torch.rand(1) < connection else erase(src, h_mask).to(device)
+				src_erased = erase(src, torch.logical_and(torch.sigmoid(preds)>0.5, article_attention_mask)).to(device) if 'h' in epoch_loss and torch.rand(1) < connection else erase(src, h_mask).to(device)
 				outputs = conditionalGenerationEvalStep(w, src_erased, trg)
 				epoch_loss['w'] += outputs['loss']
 
