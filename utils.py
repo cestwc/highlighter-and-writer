@@ -18,8 +18,8 @@ def erase(article_tensor, highlight_mask):
 	l = [torch.masked_select(article_tensor[i], highlight_mask[i]) for i in range(len(article_tensor))]
 	return torch.nn.utils.rnn.pad_sequence(l, batch_first=True, padding_value=1).long()
 
-def binary_metric(preds, y):
-	rounded_preds = preds.argmax(2)
+def binary_metric(preds, y, attention_mask):
+	rounded_preds = preds.argmax(2) * attention_mask
 	t = rounded_preds == y
 	p = rounded_preds == 1
 	tp = torch.sum(torch.logical_and(t, p).float(), dim = 1)
