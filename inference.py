@@ -1,5 +1,5 @@
 import torch
-from utils import erase, highlight
+from utils import erase
 
 import json
 from tqdm.notebook import tqdm
