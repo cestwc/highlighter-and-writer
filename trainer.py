@@ -8,12 +8,11 @@ import torch.nn.functional as F
 def binary_dice_loss(logits, targets):
 	smooth=1e-3
 	
-	attention_mask = targets > 0
-
-	inputs = torch.sigmoid(logits) * attention_mask
+	inputs = torch.sigmoid(logits) * (targets > 0)
+	targets.masked_fill_(targets < 0, 0)
 
 	intersection = (inputs * targets).sum()                            
-	dice_loss = 1 - (2.*intersection + smooth)/(inputs.sum() + (attention_mask * targets).sum() + smooth)  
+	dice_loss = 1 - (2.*intersection + smooth)/(inputs.sum() + targets.sum() + smooth) 
 	# BCE = F.binary_cross_entropy(inputs, targets, reduction='mean')
 # 	Dice_BCE = dice_loss# + BCE
 
