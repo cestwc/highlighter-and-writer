@@ -8,7 +8,7 @@ import torch.nn.functional as F
 def binary_dice_loss(logits, targets):
 	smooth=1e-3
 	
-	inputs = torch.sigmoid(logits) * (targets > 0)
+	inputs = torch.sigmoid(logits) * (targets >= 0)
 	targets.masked_fill_(targets < 0, 0)
 
 	intersection = (inputs * targets).sum()                            
