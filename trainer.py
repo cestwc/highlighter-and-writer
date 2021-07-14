@@ -153,7 +153,7 @@ def train(iterator, clip, h = None, optH = None, w = None, optW = None, connecti
 			epoch_loss['metric'] += outputs['metric']
 
 		if 'w' in epoch_loss:
-			src_erased = erase(src, torch.logical_and(torch.sigmoid(preds)>0.5, article_attention_mask)).to(device) if 'h' in epoch_loss and torch.rand(1) < connection else erase(src, h_mask).to(device)
+			src_erased = erase(src, torch.logical_and(torch.sigmoid(preds.squeeze(-1))>0.5, article_attention_mask)).to(device) if 'h' in epoch_loss and torch.rand(1) < connection else erase(src, h_mask).to(device)
 			outputs = conditionalGenerationTrainStep(w, optW, clip, src_erased, trg)
 			epoch_loss['w'] += outputs['loss']
 
@@ -186,7 +186,7 @@ def evaluate(iterator, h = None, w = None, connection = 0.5):
 				epoch_loss['metric'] += outputs['metric']
 
 			if 'w' in epoch_loss:
-				src_erased = erase(src, torch.logical_and(torch.sigmoid(preds)>0.5, article_attention_mask)).to(device) if 'h' in epoch_loss and torch.rand(1) < connection else erase(src, h_mask).to(device)
+				src_erased = erase(src, torch.logical_and(torch.sigmoid(preds.squeeze(-1))>0.5, article_attention_mask)).to(device) if 'h' in epoch_loss and torch.rand(1) < connection else erase(src, h_mask).to(device)
 				outputs = conditionalGenerationEvalStep(w, src_erased, trg)
 				epoch_loss['w'] += outputs['loss']
 
