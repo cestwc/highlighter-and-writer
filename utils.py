@@ -3,7 +3,7 @@ import nltk
 nltk.download('stopwords')
 
 from nltk.corpus import stopwords
-pattern = re.compile(r'\b(' + r'|'.join(stopwords.words('english')) + r')\b\s*' + r'|[^\w\s]')
+pattern = re.compile(r'\b(' + r'|'.join(stopwords.words('english')) + r')\b\s*' + r'|[^\w\s]', re.I)
 
 removeStopWords = lambda x:pattern.sub('', x)
 
