@@ -16,7 +16,7 @@ def binary_dice_loss(logits, targets):
 	# BCE = F.binary_cross_entropy(inputs, targets, reduction='mean')
 # 	Dice_BCE = dice_loss# + BCE
 
-	return dice_loss
+	return F.binary_cross_entropy_with_logits(logits, targets)
 
 def tokenClassificationTrainStep(model, optimizer, clip, src, labels, attention_mask = None):
 
