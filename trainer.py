@@ -12,9 +12,7 @@ def binary_dice_loss(logits, targets):
 	targets.masked_fill_(targets < 0, 0)
 
 	intersection = (inputs * targets).sum()                            
-	dice_loss = 1 - (2.*intersection + smooth)/(inputs.sum() + targets.sum() + smooth) 
-	# BCE = F.binary_cross_entropy(inputs, targets, reduction='mean')
-# 	Dice_BCE = dice_loss# + BCE
+	# return 1 - (2.*intersection + smooth)/(inputs.sum() + targets.sum() + smooth) 
 
 	return F.binary_cross_entropy_with_logits(logits, targets.float())
 
@@ -25,7 +23,7 @@ def tokenClassificationTrainStep(model, optimizer, clip, src, labels, attention_
 	logits = model(src, attention_mask = attention_mask).logits
 	
 	counts = torch.unique(labels.masked_select(attention_mask.bool()), return_counts = True)[1] if attention_mask is not None else torch.unique(labels, return_counts = True)[1]
-	criterion = binary_dice_loss#torch.nn.CrossEntropyLoss(weight = torch.tensor([0.2715, 0.7285])).to(counts.device)#1 / (1 - torch.pow(0.99857, counts))
+	criterion = binary_dice_loss
 	
 	if attention_mask is not None:
 		active_loss = attention_mask.view(-1) == 1
@@ -54,7 +52,7 @@ def tokenClassificationEvalStep(model, src, labels, attention_mask = None):
 	logits = model(src, attention_mask = attention_mask).logits
 	
 	counts = torch.unique(labels.masked_select(attention_mask.bool()), return_counts = True)[1] if attention_mask is not None else torch.unique(labels, return_counts = True)[1]
-	criterion = binary_dice_loss#torch.nn.CrossEntropyLoss(weight = torch.tensor([0.2715, 0.7285])).to(counts.device)#1 / (1 - torch.pow(0.99857, counts))
+	criterion = binary_dice_loss
 	
 	if attention_mask is not None:
 		active_loss = attention_mask.view(-1) == 1
