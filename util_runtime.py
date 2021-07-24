@@ -15,15 +15,15 @@ def metric_line(metric, mode = 'train'):
 	return ' | '.join(out)
 
 
-def save_best_models(metric, best_valid_loss, folder, h = None, w = None):
+def save_best_models(metric, best_valid_loss, folder, h, optH, w, optW):
 	if 'h' in metric and h is not None:
 		if metric['h'] < best_valid_loss['h']:
 			best_valid_loss['h'] = metric['h']
-			torch.save(h.state_dict(), os.path.join(folder + 'hglr-model.pt'))
+			torch.save({'h':h.state_dict(), 'optH':optH.state_dict()}, os.path.join(folder + 'hglr-model.pt'))
 	if 'w' in metric and w is not None:
 		if metric['w'] < best_valid_loss['w']:
 			best_valid_loss['w'] = metric['w']
-			torch.save(w.state_dict(), os.path.join(folder + 'wrtr-model.pt'))
+			torch.save({'w':w.state_dict(), 'optW':optW.state_dict()}, os.path.join(folder + 'wrtr-model.pt'))
 	return best_valid_loss
 
 # from tutorial
