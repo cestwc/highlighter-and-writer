@@ -30,7 +30,7 @@ def demo(iterator, h = None, w = None, connection = 1, tokenizer = None, directo
 				
 				connected = torch.rand(1) < connection
 				if h is not None:
-					preds = h(src, attention_mask = article_attention_mask).logits.squeeze(-1)
+					preds = torch.cat((h(src[:,:512], attention_mask = article_attention_mask[:,:512]).logits.squeeze(-1), h(src[:,512:], attention_mask = article_attention_mask[:,512:]).logits.squeeze(-1)), 1)
 					
 					if connected:
 						src_erased = erase(src, torch.logical_and(torch.sigmoid(preds)>0.5, article_attention_mask)).to(device)
