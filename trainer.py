@@ -152,7 +152,7 @@ def train(iterator, clip, h = None, optH = None, w = None, optW = None, connecti
 
 		if 'w' in epoch_loss:
 			src_erased = erase(src, torch.logical_and(torch.sigmoid(preds.squeeze(-1))>0.5, article_attention_mask)).to(device) if 'h' in epoch_loss and torch.rand(1) < connection else erase(src, h_mask).to(device)
-			outputs = conditionalGenerationTrainStep(w, optW, clip, src_erased, trg)
+			outputs = conditionalGenerationTrainStep(w, optW, clip, torch.cat((src[:,:128], src_erased), 1), trg)
 			epoch_loss['w'] += outputs['loss']
 
 	return {key:value/len(iterator) for key, value in epoch_loss.items()}
@@ -185,7 +185,7 @@ def evaluate(iterator, h = None, w = None, connection = 0.5):
 
 			if 'w' in epoch_loss:
 				src_erased = erase(src, torch.logical_and(torch.sigmoid(preds.squeeze(-1))>0.5, article_attention_mask)).to(device) if 'h' in epoch_loss and torch.rand(1) < connection else erase(src, h_mask).to(device)
-				outputs = conditionalGenerationEvalStep(w, src_erased, trg)
+				outputs = conditionalGenerationEvalStep(w,  torch.cat((src[:,:128], src_erased), 1), trg)
 				epoch_loss['w'] += outputs['loss']
 
 
