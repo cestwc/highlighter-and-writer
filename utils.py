@@ -42,3 +42,9 @@ def labelcounts(iterator, n_classes = 2):
 		for i in range(n_classes):
 			counts[i] += torch.sum(h_mask == i)
 	return counts
+
+import nltk
+nltk.download('punkt')
+from nltk.tokenize import sent_tokenize
+
+lead3 = lambda x: ' '.join(sent_tokenize(x)[:3])
