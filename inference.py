@@ -42,11 +42,11 @@ def demo(iterator, h = None, w = None, connection = 1, tokenizer = None, directo
 					src_erased = erase(src, highlight_mask).to(device)
 
 				if w is not None:
-					summary_ids = w.generate(src_erased, num_beams=4, max_length=1024, early_stopping=True)
+					summary_ids = w.generate(torch.cat((src[:,:128], src_erased), 1), num_beams=4, max_length=1024, early_stopping=True)
 					predictions = [tokenizer.decode(g, skip_special_tokens=True, clean_up_tokenization_spaces=False) for g in summary_ids]
 				else:
 					print('The model is not writing.')
-					predictions = [tokenizer.decode(g, skip_special_tokens=True, clean_up_tokenization_spaces=False) for g in src_erased]
+					predictions = [tokenizer.decode(g, skip_special_tokens=True, clean_up_tokenization_spaces=False) for g in torch.cat((src[:,:128], src_erased), 1)]
 				references = [tokenizer.decode(g, skip_special_tokens=True, clean_up_tokenization_spaces=False) for g in trg]
 
 				data = [json.dumps({'reference':references[i], 'prediction':predictions[i]}) + '\n' for i in range(len(predictions))]
