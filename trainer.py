@@ -144,7 +144,7 @@ def train(iterator, clip, h = None, optH = None, w = None, optW = None, connecti
 		epoch_loss['w'] = 0
 		device = w.device
 
-	for _, batch in enumerate(tqdm(iterator)):
+	for _, batch in enumerate(iterator):
 
 		src = batch['article_ids'].to(device)
 		trg = batch['highlights_ids'].to(device)
@@ -181,7 +181,7 @@ def evaluate(iterator, h = None, w = None, connection = 0.5):
 
 	with torch.no_grad():
 
-		for _, batch in enumerate(tqdm(iterator)):
+		for _, batch in enumerate(iterator):
 
 			src = batch['article_ids'].to(device)
 			trg = batch['highlights_ids'].to(device)
