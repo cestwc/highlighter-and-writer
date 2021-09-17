@@ -12,9 +12,9 @@ def binary_dice_loss(logits, targets):
 	targets.masked_fill_(targets < 0, 0)
 
 	intersection = (inputs * targets).sum()                            
-	# return 1 - (2.*intersection + smooth)/(inputs.sum() + targets.sum() + smooth) 
+	return 1 - (2.*intersection + smooth)/(inputs.sum() + targets.sum() + smooth) 
 
-	return F.binary_cross_entropy_with_logits(logits, targets.float())
+# 	return F.binary_cross_entropy_with_logits(logits, targets.float())
 
 def tokenClassificationTrainStep(model, optimizer, clip, src, labels, attention_mask = None):
 
