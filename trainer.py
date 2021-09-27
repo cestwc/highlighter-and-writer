@@ -144,7 +144,9 @@ def train(iterator, clip, h = None, optH = None, w = None, optW = None, connecti
 		if 'h' in epoch_loss:
 			if tuning and 'w' in epoch_loss:
 				with torch.no_grad():
-					outputs, preds = tokenClassificationEvalStep(h, src, h_mask, article_attention_mask)
+					outputs, preds = tokenClassificationEvalStep(h, src[:,:512].contiguous(), h_mask[:,:512].contiguous(), article_attention_mask[:,:512].contiguous())
+					_, preds_ = tokenClassificationEvalStep(h, src[:,512:].contiguous(), h_mask[:,512:].contiguous(), article_attention_mask[:,512:].contiguous())
+					preds = torch.cat((preds, preds_), 1)
 			else:
 				outputs, preds = tokenClassificationTrainStep(h, optH, clip, src, h_mask, article_attention_mask)
 			epoch_loss['h'] += outputs['loss']
